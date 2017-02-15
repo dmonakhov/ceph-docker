@@ -16,6 +16,10 @@ function osd_activate {
     timeout 10 bash -c "while [ ! -e ${OSD_DEVICE} ]; do sleep 1; done"
     chown ceph. ${OSD_JOURNAL}
     if [[ ${OSD_DMCRYPT} -eq 1 ]]; then
+      echo "Mounting LOCKBOX directory"
+      # NOTE(leseb): adding || true so when this bug will be fixed the entrypoint will not fail
+      # Ceph bug tracker: http://tracker.ceph.com/issues/18945
+      mount $(dev_part ${OSD_DEVICE} 3) /var/lib/ceph/osd-lockbox/$(blkid -o value -s PARTUUID $(dev_part ${OSD_DEVICE} 3)) || true
       ceph-disk -v --setuser ceph --setgroup disk activate --dmcrypt --no-start-daemon $(dev_part ${OSD_DEVICE} 1)
     else
       ceph-disk -v --setuser ceph --setgroup disk activate --no-start-daemon $(dev_part ${OSD_DEVICE} 1)
@@ -25,6 +29,10 @@ function osd_activate {
     timeout 10 bash -c "while [ ! -e $(dev_part ${OSD_DEVICE} 1) ]; do sleep 1; done"
     chown ceph. $(dev_part ${OSD_DEVICE} 2)
     if [[ ${OSD_DMCRYPT} -eq 1 ]]; then
+      echo "Mounting LOCKBOX directory"
+      # NOTE(leseb): adding || true so when this bug will be fixed the entrypoint will not fail
+      # Ceph bug tracker: http://tracker.ceph.com/issues/18945
+      mount $(dev_part ${OSD_DEVICE} 1) /var/lib/ceph/osd-lockbox/$(blkid -t TYPE=crypto_LUKS -o value -s PARTUUID $(dev_part ${OSD_DEVICE} 1)) || true
       ceph-disk -v --setuser ceph --setgroup disk activate --dmcrypt --no-start-daemon $(dev_part ${OSD_DEVICE} 1)
     else
       ceph-disk -v --setuser ceph --setgroup disk activate --no-start-daemon $(dev_part ${OSD_DEVICE} 1)
